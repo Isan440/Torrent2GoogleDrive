@@ -1,0 +1,55 @@
+name: Torrent to Google Drive
+
+on:
+  workflow_dispatch:
+    inputs:
+      magnet_link:
+        description: 'Magnet link torrent yang mau didownload'
+        required: true
+        type: string
+
+jobs:
+  download-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install aria2 & dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aria2
+          pip install google-api-python-client google-auth google-auth-httplib2
+
+      - name: Download torrent via magnet link
+        run: |
+          mkdir -p downloads
+          timeout 5h aria2c \
+            --dir=downloads \
+            --seed-time=0 \
+            --bt-stop-timeout=120 \
+            --max-connection-per-server=16 \
+            --split=16 \
+            --file-allocation=none \
+            --summary-interval=30 \
+            "${{ github.event.inputs.magnet_link }}"
+
+      - name: Decode service account key
+        run: echo "${{ secrets.GDRIVE_SA_KEY }}" | base64 -d > sa_key.json
+
+      - name: Upload to Google Drive
+        run: |
+          python scripts/upload.py \
+            --source downloads \
+            --folder-id "${{ secrets.GDRIVE_FOLDER_ID }}" \
+            --key sa_key.json
+
+      - name: Cleanup credential
+        if: always()
+        run: rm -f sa_key.json
