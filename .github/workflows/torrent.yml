@@ -38,22 +38,23 @@ jobs:
         run: |
           mkdir downloads
 
-      - name: Download Torrent
+      - name: Find torrent file
         run: |
-          if [ ! -z "${{ github.event.inputs.magnet }}" ]; then
-            aria2c \
-              --seed-time=0 \
-              --dir=downloads \
-              "${{ github.event.inputs.magnet }}"
-          elif [ ! -z "${{ github.event.inputs.torrent_url }}" ]; then
-            aria2c \
-              --seed-time=0 \
-              --dir=downloads \
-              "${{ github.event.inputs.torrent_url }}"
-          else
-            echo "No magnet or torrent URL supplied."
+          TORRENT=$(find torrents -name "*.torrent" | head -n1)
+
+          if [ -z "$TORRENT" ]; then
+            echo "No .torrent file found in torrents/"
             exit 1
           fi
+
+          echo "TORRENT_FILE=$TORRENT" >> $GITHUB_ENV
+
+      - name: Download torrent
+        run: |
+          aria2c \
+            --seed-time=0 \
+            --dir=downloads \
+            --torrent-file="${{ env.TORRENT_FILE }}"
 
       - name: Install rclone
         run: |
