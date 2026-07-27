@@ -28,11 +28,12 @@ jobs:
           timeout 5h aria2c \
             --dir=downloads \
             --seed-time=0 \
-            --bt-stop-timeout=120 \
+            --bt-stop-timeout=300 \
             --max-connection-per-server=16 \
             --split=16 \
             --file-allocation=none \
             --summary-interval=30 \
+            --bt-tracker="udp://tracker.opentrackr.org:1337/announce,udp://open.tracker.cl:1337/announce,udp://tracker.openbittorrent.com:6969/announce,udp://exodus.desync.com:6969/announce,udp://tracker.torrent.eu.org:451/announce" \
             "${{ github.event.inputs.magnet_link }}"
 
       - name: Write rclone config
