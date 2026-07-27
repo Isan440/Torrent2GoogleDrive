@@ -43,7 +43,8 @@ jobs:
           echo "$RCLONE_CONFIG_B64" | base64 -d > ~/.config/rclone/rclone.conf
 
       - name: Upload to Google Drive
-        run: rclone copy downloads gdrive: --drive-root-folder-id="${{ secrets.GDRIVE_FOLDER_ID }}" -P
+        run: |
+          rclone copy downloads gdrive: --drive-root-folder-id="${{ secrets.GDRIVE_FOLDER_ID }}" -P
 
       - name: Cleanup credential
         if: always()
