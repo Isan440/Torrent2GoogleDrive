@@ -16,16 +16,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install aria2 & dependencies
+      - name: Install aria2 & rclone
         run: |
           sudo apt-get update
           sudo apt-get install -y aria2
-          pip install google-api-python-client google-auth google-auth-httplib2
+          curl https://rclone.org/install.sh | sudo bash
 
       - name: Download torrent via magnet link
         run: |
@@ -40,17 +35,16 @@ jobs:
             --summary-interval=30 \
             "${{ github.event.inputs.magnet_link }}"
 
-      - name: Write service account key
+      - name: Write rclone config
         env:
-          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
-        run: echo "$GDRIVE_SA_KEY" > sa_key.json
-      - name: Upload to Google Drive
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
         run: |
-          python scripts/upload.py \
-            --source downloads \
-            --folder-id "${{ secrets.GDRIVE_FOLDER_ID }}" \
-            --key sa_key.json
+          mkdir -p ~/.config/rclone
+          echo "$RCLONE_CONFIG_B64" | base64 -d > ~/.config/rclone/rclone.conf
+
+      - name: Upload to Google Drive
+        run: rclone copy downloads gdrive: --drive-root-folder-id="${{ secrets.GDRIVE_FOLDER_ID }}" -P
 
       - name: Cleanup credential
         if: always()
-        run: rm -f sa_key.json
+        run: rm -f ~/.config/rclone/rclone.conf
