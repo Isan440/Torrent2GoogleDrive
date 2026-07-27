@@ -40,9 +40,10 @@ jobs:
             --summary-interval=30 \
             "${{ github.event.inputs.magnet_link }}"
 
-      - name: Decode service account key
-        run: echo "${{ secrets.GDRIVE_SA_KEY }}" | base64 -d > sa_key.json
-
+      - name: Write service account key
+        env:
+          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
+        run: echo "$GDRIVE_SA_KEY" > sa_key.json
       - name: Upload to Google Drive
         run: |
           python scripts/upload.py \
