@@ -1,0 +1,34 @@
+name: Torrent2GoogleDrive v2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-qbittorrent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install qBittorrent
+        run: |
+          sudo apt update
+          sudo apt install -y qbittorrent-nox
+
+      - name: Check version
+        run: |
+          qbittorrent-nox --version
+
+      - name: Start qBittorrent
+        run: |
+          mkdir -p downloads
+          nohup qbittorrent-nox --profile=$(pwd)/qb-profile > qb.log 2>&1 &
+          sleep 15
+
+      - name: Show log
+        run: |
+          cat qb.log || true
+
+      - name: Check process
+        run: |
+          ps aux | grep qbittorrent
