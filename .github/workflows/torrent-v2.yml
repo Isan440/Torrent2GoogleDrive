@@ -22,7 +22,7 @@ jobs:
       - name: Start qBittorrent
         run: |
           mkdir -p downloads
-          nohup qbittorrent-nox --profile=$(pwd)/qb-profile > qb.log 2>&1 &
+          nohup qbittorrent-nox --profile="$(pwd)/qb-profile" > qb.log 2>&1 &
           sleep 15
 
       - name: Show log
@@ -31,4 +31,4 @@ jobs:
 
       - name: Check process
         run: |
-          ps aux | grep qbittorrent
+          pgrep -a qbittorrent || true
